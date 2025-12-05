@@ -126,8 +126,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { learningApi } from '@/api/modules/learning'
 
 interface Lesson {
   id: string
@@ -138,553 +139,89 @@ interface Lesson {
   progress: number
   theory: string
   codeExample: string
-  uml?: string
   exercise: string
   solution: string
 }
 
 // 响应式数据
 const activeLesson = ref('classes')
-const lessons = ref<Lesson[]>([
-  {
-    id: 'classes',
-    title: '类和对象',
-    description: '学习如何定义类和创建对象',
-    icon: 'el-icon-s-custom',
-    completed: true,
-    progress: 100,
-    theory: `
-      <p><strong>类（Class）</strong>是面向对象编程的核心概念，它定义了对象的属性和方法。</p>
-      <p><strong>对象（Object）</strong>是类的实例，具有类定义的属性和方法。</p>
-      <p><strong>类的定义语法：</strong></p>
-      <pre><code>class ClassName:
-    def __init__(self, parameters):
-        # 初始化方法
-        self.attribute = value
-    
-    def method_name(self):
-        # 方法定义
-        pass</code></pre>
-    `,
-    codeExample: `# 定义一个简单的Person类
-class Person:
-    """人类"""
-    
-    def __init__(self, name, age):
-        """初始化方法"""
-        self.name = name
-        self.age = age
-    
-    def introduce(self):
-        """自我介绍方法"""
-        return f"大家好，我叫{self.name}，今年{self.age}岁。"
-    
-    def have_birthday(self):
-        """过生日方法"""
-        self.age += 1
-        return f"{self.name}过生日了，现在{self.age}岁！"
+const lessons = ref<Lesson[]>([])
+const loading = ref(false)
 
-# 创建对象
-person1 = Person("张三", 25)
-person2 = Person("李四", 30)
-
-# 调用方法
-print(person1.introduce())
-print(person2.introduce())
-
-# 修改属性
-person1.have_birthday()
-print(person1.introduce())`,
-    uml: `@startuml
-class Person {
-  - name: str
-  - age: int
-  + __init__(name: str, age: int)
-  + introduce(): str
-  + have_birthday(): str
-}
-@enduml`,
-    exercise: '创建一个Student类，包含姓名、学号、成绩属性，以及计算平均分的方法。',
-    solution: `class Student:
-    def __init__(self, name, student_id, scores):
-        self.name = name
-        self.student_id = student_id
-        self.scores = scores
-    
-    def calculate_average(self):
-        return sum(self.scores) / len(self.scores)
-    
-    def get_info(self):
-        return f"学生{self.name}(学号:{self.student_id})，平均分:{self.calculate_average():.2f}"
-
-student = Student("王五", "2023001", [85, 92, 78, 90])
-print(student.get_info())`
-  },
-  {
-    id: 'inheritance',
-    title: '继承',
-    description: '学习类的继承和多级继承',
-    icon: 'el-icon-s-fold',
-    completed: true,
-    progress: 100,
-    theory: `
-      <p><strong>继承（Inheritance）</strong>允许一个类继承另一个类的属性和方法。</p>
-      <p><strong>继承的语法：</strong></p>
-      <pre><code>class ChildClass(ParentClass):
-    # 子类可以添加新的属性和方法
-    # 也可以重写父类的方法
-    pass</code></pre>
-      <p><strong>继承的类型：</strong></p>
-      <ul>
-        <li>单继承：一个子类继承一个父类</li>
-        <li>多继承：一个子类继承多个父类</li>
-        <li>多级继承：子类继承父类，父类又继承祖父类</li>
-      </ul>
-    `,
-    codeExample: `# 父类：Animal
-class Animal:
-    def __init__(self, name, species):
-        self.name = name
-        self.species = species
-    
-    def speak(self):
-        return "动物发出声音"
-    
-    def get_info(self):
-        return f"{self.name}是一只{self.species}"
-
-# 子类：Dog，继承Animal
-class Dog(Animal):
-    def __init__(self, name, breed):
-        super().__init__(name, "狗")
-        self.breed = breed
-    
-    def speak(self):  # 重写父类方法
-        return "汪汪！"
-    
-    def fetch(self):  # 子类特有方法
-        return f"{self.name}在捡球"
-
-# 子类：Cat，继承Animal
-class Cat(Animal):
-    def __init__(self, name, color):
-        super().__init__(name, "猫")
-        self.color = color
-    
-    def speak(self):  # 重写父类方法
-        return "喵喵！"
-    
-    def climb(self):  # 子类特有方法
-        return f"{self.name}在爬树"
-
-# 创建对象
-dog = Dog("旺财", "金毛")
-cat = Cat("咪咪", "白色")
-
-print(dog.get_info())
-print(dog.speak())
-print(dog.fetch())
-
-print(cat.get_info())
-print(cat.speak())
-print(cat.climb())`,
-    uml: `@startuml
-class Animal {
-  - name: str
-  - species: str
-  + __init__(name: str, species: str)
-  + speak(): str
-  + get_info(): str
-}
-
-class Dog {
-  - breed: str
-  + __init__(name: str, breed: str)
-  + speak(): str
-  + fetch(): str
-}
-
-class Cat {
-  - color: str
-  + __init__(name: str, color: str)
-  + speak(): str
-  + climb(): str
-}
-
-Animal <|-- Dog
-Animal <|-- Cat
-@enduml`,
-    exercise: '创建一个Vehicle父类和Car、Motorcycle子类，实现多态特性。',
-    solution: `class Vehicle:
-    def __init__(self, brand, speed):
-        self.brand = brand
-        self.speed = speed
-    
-    def start(self):
-        return "车辆启动"
-    
-    def get_info(self):
-        return f"{self.brand}车辆，最高速度{self.speed}km/h"
-
-class Car(Vehicle):
-    def __init__(self, brand, speed, seats):
-        super().__init__(brand, speed)
-        self.seats = seats
-    
-    def start(self):
-        return "汽车启动：引擎轰鸣"
-    
-    def honk(self):
-        return "汽车鸣笛：滴滴"
-
-class Motorcycle(Vehicle):
-    def __init__(self, brand, speed, type):
-        super().__init__(brand, speed)
-        self.type = type
-    
-    def start(self):
-        return "摩托车启动：引擎咆哮"
-    
-    def wheelie(self):
-        return "摩托车翘头特技"
-
-# 多态演示
-vehicles = [Car("丰田", 180, 5), Motorcycle("本田", 200, "跑车")]
-for vehicle in vehicles:
-    print(vehicle.get_info())
-    print(vehicle.start())`
-  },
-  {
-    id: 'encapsulation',
-    title: '封装',
-    description: '学习访问控制和属性封装',
-    icon: 'el-icon-lock',
-    completed: false,
-    progress: 40,
-    theory: `
-      <p><strong>封装（Encapsulation）</strong>是将数据和方法包装在类中，并控制对它们的访问。</p>
-      <p><strong>访问控制：</strong></p>
-      <ul>
-        <li><code>public</code>：公开的，可以在任何地方访问</li>
-        <li><code>protected</code>：受保护的，以单下划线开头，建议只在类内部和子类中访问</li>
-        <li><code>private</code>：私有的，以双下划线开头，只能在类内部访问</li>
-      </ul>
-      <p><strong>属性封装：</strong>使用getter和setter方法来控制对属性的访问。</p>
-    `,
-    codeExample: `# 封装示例：BankAccount类
-class BankAccount:
-    def __init__(self, account_holder, initial_balance=0):
-        self.account_holder = account_holder  # 公开属性
-        self._account_number = self._generate_account_number()  # 受保护属性
-        self.__balance = initial_balance  # 私有属性
-    
-    def _generate_account_number(self):
-        """生成账户号码（受保护方法）"""
-        import random
-        return f"ACC{random.randint(100000, 999999)}"
-    
-    def get_balance(self):
-        """获取余额（getter方法）"""
-        return self.__balance
-    
-    def deposit(self, amount):
-        """存款"""
-        if amount > 0:
-            self.__balance += amount
-            return f"存款成功，当前余额：{self.__balance}"
-        else:
-            return "存款金额必须大于0"
-    
-    def withdraw(self, amount):
-        """取款"""
-        if amount > 0 and amount <= self.__balance:
-            self.__balance -= amount
-            return f"取款成功，当前余额：{self.__balance}"
-        else:
-            return "取款失败，余额不足或金额无效"
-    
-    def get_account_info(self):
-        """获取账户信息"""
-        return f"账户持有人：{self.account_holder}\n账户号码：{self._account_number}\n当前余额：{self.__balance}"
-
-# 创建银行账户
-account = BankAccount("张三", 1000)
-
-# 公开属性可以访问
-print(f"账户持有人：{account.account_holder}")
-
-# 受保护属性（不建议直接访问）
-print(f"账户号码：{account._account_number}")
-
-# 私有属性无法直接访问（会报错）
-# print(account.__balance)  # 错误！
-
-# 通过方法访问
-print(account.get_balance())
-print(account.deposit(500))
-print(account.withdraw(200))
-print(account.get_account_info())`,
-    uml: `@startuml
-class BankAccount {
-  + account_holder: str
-  - _account_number: str
-  - __balance: float
-  + __init__(account_holder: str, initial_balance: float)
-  - _generate_account_number(): str
-  + get_balance(): float
-  + deposit(amount: float): str
-  + withdraw(amount: float): str
-  + get_account_info(): str
-}
-@enduml`,
-    exercise: '创建一个Employee类，封装薪资信息，提供计算年终奖的方法。',
-    solution: `class Employee:
-    def __init__(self, name, position, base_salary):
-        self.name = name
-        self.position = position
-        self._base_salary = base_salary  # 受保护属性
-        self.__bonus_rate = 0.1  # 私有属性
-    
-    def get_salary_info(self):
-        """获取薪资信息"""
-        return f"{self.name}({self.position})，基本工资：{self._base_salary}"
-    
-    def calculate_bonus(self, performance_rating):
-        """计算年终奖"""
-        if performance_rating == "A":
-            bonus_multiplier = 2.0
-        elif performance_rating == "B":
-            bonus_multiplier = 1.5
-        else:
-            bonus_multiplier = 1.0
-        
-        bonus = self._base_salary * self.__bonus_rate * bonus_multiplier
-        return f"年终奖：{bonus:.2f}元"
-    
-    def set_bonus_rate(self, rate):
-        """设置奖金率（需要验证）"""
-        if 0 <= rate <= 0.2:
-            self.__bonus_rate = rate
-            return "奖金率设置成功"
-        else:
-            return "奖金率必须在0到0.2之间"
-
-employee = Employee("李四", "工程师", 15000)
-print(employee.get_salary_info())
-print(employee.calculate_bonus("A"))
-print(employee.set_bonus_rate(0.15))`
-  },
-  {
-    id: 'polymorphism',
-    title: '多态',
-    description: '学习多态的概念和实现',
-    icon: 'el-icon-s-opportunity',
-    completed: false,
-    progress: 0,
-    theory: `
-      <p><strong>多态（Polymorphism）</strong>是指同一个方法在不同对象上表现出不同的行为。</p>
-      <p><strong>多态的实现方式：</strong></p>
-      <ul>
-        <li>方法重写（Method Overriding）：子类重写父类的方法</li>
-        <li>方法重载（Method Overloading）：Python不支持传统的方法重载，但可以通过默认参数实现类似功能</li>
-        <li>鸭子类型（Duck Typing）："如果它走起来像鸭子，叫起来像鸭子，那么它就是鸭子"</li>
-      </ul>
-      <p><strong>多态的优势：</strong>提高代码的灵活性和可扩展性。</p>
-    `,
-    codeExample: `# 多态示例：图形类
-class Shape:
-    """图形基类"""
-    def area(self):
-        """计算面积"""
-        raise NotImplementedError("子类必须实现area方法")
-    
-    def perimeter(self):
-        """计算周长"""
-        raise NotImplementedError("子类必须实现perimeter方法")
-
-class Rectangle(Shape):
-    """矩形类"""
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-    
-    def area(self):
-        return self.width * self.height
-    
-    def perimeter(self):
-        return 2 * (self.width + self.height)
-
-class Circle(Shape):
-    """圆形类"""
-    def __init__(self, radius):
-        self.radius = radius
-    
-    def area(self):
-        import math
-        return math.pi * self.radius ** 2
-    
-    def perimeter(self):
-        import math
-        return 2 * math.pi * self.radius
-
-class Triangle(Shape):
-    """三角形类"""
-    def __init__(self, a, b, c):
-        self.a = a
-        self.b = b
-        self.c = c
-    
-    def area(self):
-        # 使用海伦公式计算面积
-        s = (self.a + self.b + self.c) / 2
-        return (s * (s - self.a) * (s - self.b) * (s - self.c)) ** 0.5
-    
-    def perimeter(self):
-        return self.a + self.b + self.c
-
-# 多态演示：处理不同类型的图形
-def process_shapes(shapes):
-    """处理图形列表，展示多态特性"""
-    for shape in shapes:
-        print(f"图形面积: {shape.area():.2f}")
-        print(f"图形周长: {shape.perimeter():.2f}")
-        print("-" * 30)
-
-# 创建不同类型的图形
-shapes = [
-    Rectangle(5, 3),
-    Circle(4),
-    Triangle(3, 4, 5)
-]
-
-# 统一处理，每个图形调用相同的方法名但执行不同的实现
-process_shapes(shapes)
-
-# 鸭子类型示例
-def make_sound(animal):
-    """只要对象有speak方法，就可以调用"""
-    return animal.speak()
-
-class Dog:
-    def speak(self):
-        return "汪汪！"
-
-class Cat:
-    def speak(self):
-        return "喵喵！"
-
-class Car:
-    def speak(self):
-        return "滴滴！"
-
-# 不同类型的对象都可以调用make_sound函数
-print(make_sound(Dog()))
-print(make_sound(Cat()))
-print(make_sound(Car()))`,
-    uml: `@startuml
-class Shape {
-  + area(): float
-  + perimeter(): float
-}
-
-class Rectangle {
-  - width: float
-  - height: float
-  + __init__(width: float, height: float)
-  + area(): float
-  + perimeter(): float
-}
-
-class Circle {
-  - radius: float
-  + __init__(radius: float)
-  + area(): float
-  + perimeter(): float
-}
-
-class Triangle {
-  - a: float
-  - b: float
-  - c: float
-  + __init__(a: float, b: float, c: float)
-  + area(): float
-  + perimeter(): float
-}
-
-Shape <|-- Rectangle
-Shape <|-- Circle
-Shape <|-- Triangle
-@enduml`,
-    exercise: '创建一个支付系统，支持多种支付方式（支付宝、微信、银行卡），实现多态支付。',
-    solution: `class Payment:
-    """支付基类"""
-    def pay(self, amount):
-        raise NotImplementedError("子类必须实现pay方法")
-
-class Alipay(Payment):
-    def pay(self, amount):
-        return f"支付宝支付：{amount}元"
-
-class WechatPay(Payment):
-    def pay(self, amount):
-        return f"微信支付：{amount}元"
-
-class BankCardPay(Payment):
-    def pay(self, amount):
-        return f"银行卡支付：{amount}元"
-
-class PaymentProcessor:
-    """支付处理器"""
-    def process_payment(self, payment_method, amount):
-        return payment_method.pay(amount)
-
-# 使用多态处理不同支付方式
-processor = PaymentProcessor()
-payments = [Alipay(), WechatPay(), BankCardPay()]
-
-for payment in payments:
-    print(processor.process_payment(payment, 100))`
-  }
-])
-
-// 计算当前选中的课程
+// 计算属性
 const currentLesson = computed(() => {
-  return lessons.value.find(lesson => lesson.id === activeLesson.value)
+  return lessons.value.find(lesson => lesson.id === activeLesson.value) || lessons.value[0]
 })
+
+// 生命周期
+onMounted(() => {
+  loadLessons()
+})
+
+// 加载课程数据
+const loadLessons = async () => {
+  loading.value = true
+  try {
+    // 假设面向对象编程模块的ID是2
+    const response = await learningApi.getCoursesByModule(2)
+    if (response.code === 200) {
+      // 将从后端获取的课程数据转换为Lesson接口的格式
+      lessons.value = response.data.map((course: any) => ({
+        id: course.id.toString(),
+        title: course.title,
+        description: course.description || '',
+        icon: 'el-icon-s-flag', // 暂时使用固定图标
+        completed: course.completed || false,
+        progress: course.completed ? 100 : 0,
+        theory: course.description || '',
+        codeExample: course.codeExample || '',
+        exercise: course.exercise || '',
+        solution: course.solution || ''
+      }))
+    } else {
+      ElMessage.error('加载课程失败')
+    }
+  } catch (error) {
+    ElMessage.error('加载课程失败')
+    console.error('加载课程失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 // 选择课程
 const selectLesson = (lessonId: string) => {
   activeLesson.value = lessonId
 }
 
-// 标记为完成
+// 标记课程完成
 const markAsCompleted = () => {
-  const lesson = lessons.value.find(l => l.id === activeLesson.value)
-  if (lesson) {
-    lesson.completed = true
-    lesson.progress = 100
-    ElMessage.success('课程标记为已完成！')
+  if (currentLesson.value) {
+    currentLesson.value.completed = !currentLesson.value.completed
+    currentLesson.value.progress = currentLesson.value.completed ? 100 : 0
+    ElMessage.success(currentLesson.value.completed ? '课程标记为已完成' : '取消已完成标记')
   }
 }
 
 // 运行代码
-const runCode = () => {
-  ElMessage.info('代码运行功能将在后续版本中实现')
+const runCode = async () => {
+  // 这里可以连接到后端的代码运行API
+  ElMessage.success('代码运行功能将在后续版本中实现')
 }
 
 // 复制代码
-const copyCode = async () => {
-  try {
-    await navigator.clipboard.writeText(currentLesson.value?.codeExample || '')
+const copyCode = () => {
+  if (currentLesson.value) {
+    navigator.clipboard.writeText(currentLesson.value.codeExample)
     ElMessage.success('代码已复制到剪贴板')
-  } catch (err) {
-    ElMessage.error('复制失败')
   }
 }
 
-// 显示答案
+// 查看答案
 const showSolution = () => {
-  ElMessage.info(`答案: ${currentLesson.value?.solution}`)
+  if (currentLesson.value) {
+    ElMessage.success('答案：' + currentLesson.value.solution)
+  }
 }
 </script>
 

@@ -101,7 +101,7 @@
             <h2>{{ currentChapter.title }}</h2>
             <div class="chapter-actions">
               <el-button size="small" @click="toggleCodeExample">
-                <el-icon><Code /></el-icon>
+                <el-icon><Document /></el-icon>
                 {{ showCodeExample ? '隐藏代码' : '显示代码' }}
               </el-button>
               <el-button size="small" @click="runCodeExample" :loading="runningCode">
@@ -177,258 +177,160 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   Reading,
   Document,
-  Code,
   VideoPlay,
   Check,
   ArrowLeft,
   ArrowRight
 } from '@element-plus/icons-vue'
+import { learningApi } from '@/api/modules/learning'
 
 // 响应式数据
 const activeChapter = ref('1')
 const showCodeExample = ref(true)
 const runningCode = ref(false)
 const codeResult = ref('')
+const learningModules = ref<any[]>([])
+const courses = ref<any[]>([])
+const loading = ref(false)
 
 const progress = reactive({
   completion: 25,
   learned: 2,
   total: 8,
-  timeSpent: '2小时15分钟'
+  timeSpent: '15分钟'
 })
 
 // 章节数据
 const chapters = ref([
-  {
-    id: '1',
-    title: '变量和数据类型',
-    completed: true,
-    theory: `
-      <p>Python是一种动态类型语言，变量不需要显式声明类型。Python会自动推断变量的类型。</p>
-      <h4>基本数据类型：</h4>
-      <ul>
-        <li><strong>整数(int)</strong>：如 42, -10, 0</li>
-        <li><strong>浮点数(float)</strong>：如 3.14, -0.001, 2.0</li>
-        <li><strong>字符串(str)</strong>：如 "hello", 'world', """多行字符串"""</li>
-        <li><strong>布尔值(bool)</strong>：True 或 False</li>
-        <li><strong>None</strong>：表示空值</li>
-      </ul>
-    `,
-    codeExample: `# 变量定义和数据类型
-# 整数
-age = 25
-count = -10
-
-# 浮点数
-price = 19.99
-temperature = -5.5
-
-# 字符串
-name = "Alice"
-message = 'Hello, World!'
-
-# 布尔值
-is_active = True
-is_completed = False
-
-# 类型检查
-print(type(age))     # <class 'int'>
-print(type(price))   # <class 'float'>
-print(type(name))    # <class 'str'>
-print(type(is_active)) # <class 'bool'>`,
-    javaComparison: `// Java 变量定义
-public class Variables {
-    public static void main(String[] args) {
-        // 必须声明类型
-        int age = 25;
-        double price = 19.99;
-        String name = "Alice";
-        boolean isActive = true;
-        
-        // 类型检查
-        System.out.println(((Object)age).getClass().getName());
-        System.out.println(((Object)price).getClass().getName());
-        System.out.println(name.getClass().getName());
-        System.out.println(((Object)isActive).getClass().getName());
-    }
-}`,
-    pythonComparison: `# Python 变量定义
-# 无需声明类型，自动推断
-age = 25
-price = 19.99
-name = "Alice"
-is_active = True
-
-# 类型检查
-print(type(age))
-print(type(price))
-print(type(name))
-print(type(is_active))`
-  },
-  {
-    id: '2',
-    title: '运算符和表达式',
-    completed: true,
-    theory: `
-      <p>Python支持丰富的运算符，包括算术运算符、比较运算符、逻辑运算符等。</p>
-      <h4>主要运算符：</h4>
-      <ul>
-        <li><strong>算术运算符</strong>：+ - * / % ** //</li>
-        <li><strong>比较运算符</strong>：== != > < >= <=</li>
-        <li><strong>逻辑运算符</strong>：and or not</li>
-        <li><strong>赋值运算符</strong>：= += -= *= /=</li>
-      </ul>
-    `,
-    codeExample: `# 算术运算符
-x = 10
-y = 3
-
-print(x + y)   # 13
-print(x - y)   # 7
-print(x * y)   # 30
-print(x / y)   # 3.333...
-print(x % y)   # 1
-print(x ** y)  # 1000
-print(x // y)  # 3
-
-# 比较运算符
-print(x == y)  # False
-print(x != y)  # True
-print(x > y)   # True
-
-# 逻辑运算符
-a = True
-b = False
-print(a and b) # False
-print(a or b)  # True
-print(not a)   # False`,
-    javaComparison: `// Java 运算符
-public class Operators {
-    public static void main(String[] args) {
-        int x = 10;
-        int y = 3;
-        
-        // 算术运算符
-        System.out.println(x + y);  // 13
-        System.out.println(x - y);  // 7
-        System.out.println(x * y);  // 30
-        System.out.println(x / y);  // 3 (整数除法)
-        System.out.println(x % y);  // 1
-        
-        // 比较运算符
-        System.out.println(x == y); // false
-        System.out.println(x != y); // true
-        
-        // 逻辑运算符
-        boolean a = true;
-        boolean b = false;
-        System.out.println(a && b); // false
-        System.out.println(a || b); // true
-        System.out.println(!a);     // false
-    }
-}`,
-    pythonComparison: `# Python 运算符
-x = 10
-y = 3
-
-# 算术运算符
-print(x + y)   # 13
-print(x - y)   # 7
-print(x * y)   # 30
-print(x / y)   # 3.333... (浮点数除法)
-print(x % y)   # 1
-print(x ** y)  # 1000 (幂运算)
-print(x // y)  # 3 (整数除法)
-
-# 比较运算符
-print(x == y)  # False
-print(x != y)  # True
-
-# 逻辑运算符
-a = True
-b = False
-print(a and b) # False
-print(a or b)  # True
-print(not a)   # False`
-  }
-  // 其他章节数据...
+  // 这里将从后端API获取数据
 ])
 
 // 计算属性
 const currentChapter = computed(() => {
-  return chapters.value.find(chapter => chapter.id === activeChapter.value) || chapters.value[0]
+  const chapter = chapters.value.find((item: any) => item.id === activeChapter.value)
+  return chapter || chapters.value[0]
 })
 
-// 方法定义
-const handleChapterSelect = (index: string) => {
-  activeChapter.value = index
-  codeResult.value = ''
+// 生命周期
+onMounted(() => {
+  loadLearningModules()
+})
+
+// 加载学习模块
+const loadLearningModules = async () => {
+  loading.value = true
+  try {
+    const response = await learningApi.getModules()
+    if (response.code === 200) {
+      learningModules.value = response.data
+      // 加载第一个模块的课程
+      if (learningModules.value.length > 0) {
+        loadCoursesByModule(learningModules.value[0].id)
+      }
+    } else {
+      ElMessage.error('加载学习模块失败')
+    }
+  } catch (error) {
+    ElMessage.error('加载学习模块失败')
+    console.error('加载学习模块失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
+// 加载模块下的课程
+const loadCoursesByModule = async (moduleId: number) => {
+  loading.value = true
+  try {
+    const response = await learningApi.getCoursesByModule(moduleId)
+    if (response.code === 200) {
+      courses.value = response.data
+      // 将课程转换为章节数据结构
+      chapters.value = courses.value.map((course: any, index: number) => ({
+        id: (index + 1).toString(),
+        title: course.title,
+        theory: course.description || '',
+        codeExample: course.codeExample || '',
+        javaComparison: course.javaComparison || '',
+        pythonComparison: course.pythonComparison || '',
+        completed: course.completed || false
+      }))
+    } else {
+      ElMessage.error('加载课程失败')
+    }
+  } catch (error) {
+    ElMessage.error('加载课程失败')
+    console.error('加载课程失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 章节选择
+const handleChapterSelect = (key: string) => {
+  activeChapter.value = key
+}
+
+// 切换代码示例显示
 const toggleCodeExample = () => {
   showCodeExample.value = !showCodeExample.value
 }
 
+// 运行代码示例
 const runCodeExample = async () => {
   runningCode.value = true
-  
+  codeResult.value = ''
+
   try {
-    // 模拟代码执行
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 根据当前章节生成不同的运行结果
-    switch (activeChapter.value) {
-      case '1':
-        codeResult.value = `<class 'int'>\n<class 'float'>\n<class 'str'>\n<class 'bool'>`
-        break
-      case '2':
-        codeResult.value = `13\n7\n30\n3.3333333333333335\n1\n1000\n3\nFalse\nTrue\nTrue\nFalse\nTrue\nFalse`
-        break
-      default:
-        codeResult.value = '代码执行成功！'
-    }
-    
-    ElMessage.success('代码执行完成')
+    // 这里可以连接到后端的代码运行API
+    // 暂时模拟运行结果
+    setTimeout(() => {
+      codeResult.value = '运行成功！\n\n' + currentChapter.value.codeExample
+      runningCode.value = false
+    }, 1500)
   } catch (error) {
-    ElMessage.error('代码执行失败')
-    console.error('执行错误:', error)
-  } finally {
+    codeResult.value = '运行失败：' + error
     runningCode.value = false
   }
 }
 
+// 标记章节完成
 const markAsComplete = () => {
-  const chapter = currentChapter.value
-  chapter.completed = !chapter.completed
-  
-  if (chapter.completed) {
-    ElMessage.success('章节标记为已完成')
-    // 更新进度
-    progress.learned = chapters.value.filter(c => c.completed).length
-    progress.completion = Math.round((progress.learned / progress.total) * 100)
-  } else {
-    ElMessage.info('章节标记为未完成')
+  if (currentChapter.value) {
+    currentChapter.value.completed = !currentChapter.value.completed
+    // 更新学习进度
+    updateProgress()
+    ElMessage.success(currentChapter.value.completed ? '标记为已完成' : '取消已完成标记')
   }
 }
 
+// 更新学习进度
+const updateProgress = () => {
+  const completedChapters = chapters.value.filter((chapter: any) => chapter.completed).length
+  const totalChapters = chapters.value.length
+  progress.completion = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+  progress.learned = completedChapters
+  progress.total = totalChapters
+}
+
+// 上一章
 const goToPreviousChapter = () => {
-  const current = parseInt(activeChapter.value)
-  if (current > 1) {
-    activeChapter.value = (current - 1).toString()
-    codeResult.value = ''
+  const currentIndex = parseInt(activeChapter.value)
+  if (currentIndex > 1) {
+    activeChapter.value = (currentIndex - 1).toString()
   }
 }
 
+// 下一章
 const goToNextChapter = () => {
-  const current = parseInt(activeChapter.value)
-  if (current < chapters.value.length) {
-    activeChapter.value = (current + 1).toString()
-    codeResult.value = ''
+  const currentIndex = parseInt(activeChapter.value)
+  if (currentIndex < chapters.value.length) {
+    activeChapter.value = (currentIndex + 1).toString()
   }
 }
 </script>

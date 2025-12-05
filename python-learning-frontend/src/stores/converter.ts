@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CodeConversionRequest, CodeConversionResponse, ConversionHistory, ConversionOptions } from '@/types/api'
-import { request } from '@/utils/request'
+import { converterApi } from '@/api/modules/converter'
 
 export const useConverterStore = defineStore('converter', () => {
   // 状态
@@ -65,7 +65,7 @@ export const useConverterStore = defineStore('converter', () => {
         options: optionsToUse
       }
 
-      const response = await request.post('/api/converter/convert', requestData)
+      const response = await converterApi.convertCode(requestData)
       
       if (response.code === 200) {
         const conversionResponse: CodeConversionResponse = response.data
@@ -158,12 +158,12 @@ export const useConverterStore = defineStore('converter', () => {
   }
 
   // 获取转换历史
-  const fetchConversionHistory = async () => {
+  const fetchConversionHistory = async (page = 1, size = 10) => {
     try {
-      const response = await request.get('/api/converter/history')
+      const response = await converterApi.getConversionHistory({ page, size })
       
       if (response.code === 200) {
-        conversionHistory.value = response.data
+        conversionHistory.value = response.data.items
         return { success: true, data: response.data }
       } else {
         return { success: false, error: response.message }

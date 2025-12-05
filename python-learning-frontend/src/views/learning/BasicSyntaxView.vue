@@ -118,8 +118,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { learningApi } from '@/api/modules/learning'
 
 interface Lesson {
   id: string
@@ -136,252 +137,84 @@ interface Lesson {
 
 // 响应式数据
 const activeLesson = ref('variables')
-const lessons = ref<Lesson[]>([
-  {
-    id: 'variables',
-    title: '变量和数据类型',
-    description: '学习Python中的变量声明和基本数据类型',
-    icon: 'el-icon-s-flag',
-    completed: true,
-    progress: 100,
-    theory: `
-      <p>在Python中，变量不需要显式声明类型，可以直接赋值使用。</p>
-      <p><strong>基本数据类型包括：</strong></p>
-      <ul>
-        <li><code>int</code> - 整数类型</li>
-        <li><code>float</code> - 浮点数类型</li>
-        <li><code>str</code> - 字符串类型</li>
-        <li><code>bool</code> - 布尔类型</li>
-        <li><code>list</code> - 列表类型</li>
-        <li><code>dict</code> - 字典类型</li>
-      </ul>
-    `,
-    codeExample: `# 变量声明和数据类型
-# 整数
-age = 25
+const lessons = ref<Lesson[]>([])
+const loading = ref(false)
 
-# 浮点数
-height = 1.75
-
-# 字符串
-name = "张三"
-
-# 布尔值
-is_student = True
-
-# 列表
-hobbies = ["编程", "阅读", "运动"]
-
-# 字典
-person = {
-    "name": "李四",
-    "age": 30,
-    "city": "北京"
-}
-
-# 打印变量
-print(f"姓名: {name}")
-print(f"年龄: {age}")
-print(f"身高: {height}")
-print(f"爱好: {hobbies}")`,
-    exercise: '创建一个包含学生信息的字典，包括姓名、年龄、成绩，并打印出来。',
-    solution: `student = {
-    "name": "王五",
-    "age": 20,
-    "scores": [85, 92, 78]
-}
-print(f"学生信息: {student}")`
-  },
-  {
-    id: 'operators',
-    title: '运算符',
-    description: '学习Python中的算术、比较和逻辑运算符',
-    icon: 'el-icon-c-scale-to-original',
-    completed: true,
-    progress: 100,
-    theory: `
-      <p>Python支持多种运算符：</p>
-      <p><strong>算术运算符：</strong> +, -, *, /, %, **, //</p>
-      <p><strong>比较运算符：</strong> ==, !=, >, <, >=, <=</p>
-      <p><strong>逻辑运算符：</strong> and, or, not</p>
-      <p><strong>赋值运算符：</strong> =, +=, -=, *=, /=</p>
-    `,
-    codeExample: `# 算术运算符示例
-x = 10
-y = 3
-
-print(f"x + y = {x + y}")  # 加法
-print(f"x - y = {x - y}")  # 减法
-print(f"x * y = {x * y}")  # 乘法
-print(f"x / y = {x / y}")  # 除法
-print(f"x % y = {x % y}")  # 取模
-print(f"x ** y = {x ** y}")  # 幂运算
-print(f"x // y = {x // y}")  # 整除
-
-# 比较运算符
-print(f"x == y: {x == y}")
-print(f"x != y: {x != y}")
-print(f"x > y: {x > y}")
-
-# 逻辑运算符
-a = True
-b = False
-print(f"a and b: {a and b}")
-print(f"a or b: {a or b}")
-print(f"not a: {not a}")`,
-    exercise: '编写一个程序，计算圆的面积和周长，给定半径为5。',
-    solution: `import math
-
-radius = 5
-area = math.pi * radius ** 2
-circumference = 2 * math.pi * radius
-
-print(f"圆的面积: {area:.2f}")
-print(f"圆的周长: {circumference:.2f}")`
-  },
-  {
-    id: 'control-flow',
-    title: '控制流程',
-    description: '学习条件语句和循环语句',
-    icon: 'el-icon-s-operation',
-    completed: false,
-    progress: 60,
-    theory: `
-      <p>Python中的控制流程包括条件语句和循环语句：</p>
-      <p><strong>条件语句：</strong></p>
-      <ul>
-        <li><code>if</code> - 如果条件为真执行</li>
-        <li><code>elif</code> - 否则如果条件为真执行</li>
-        <li><code>else</code> - 否则执行</li>
-      </ul>
-      <p><strong>循环语句：</strong></p>
-      <ul>
-        <li><code>for</code> - 遍历序列</li>
-        <li><code>while</code> - 当条件为真时循环</li>
-      </ul>
-    `,
-    codeExample: `# 条件语句示例
-score = 85
-
-if score >= 90:
-    grade = "A"
-elif score >= 80:
-    grade = "B"
-elif score >= 70:
-    grade = "C"
-else:
-    grade = "D"
-
-print(f"分数: {score}, 等级: {grade}")
-
-# for循环示例
-fruits = ["苹果", "香蕉", "橙子"]
-for fruit in fruits:
-    print(f"我喜欢吃{fruit}")
-
-# while循环示例
-count = 1
-while count <= 5:
-    print(f"计数: {count}")
-    count += 1`,
-    exercise: '编写一个程序，找出1到100之间所有能被3和5同时整除的数。',
-    solution: `for i in range(1, 101):
-    if i % 3 == 0 and i % 5 == 0:
-        print(i)`
-  },
-  {
-    id: 'functions',
-    title: '函数',
-    description: '学习如何定义和调用函数',
-    icon: 'el-icon-s-marketing',
-    completed: false,
-    progress: 0,
-    theory: `
-      <p>函数是组织代码的重要方式，可以重复使用代码块。</p>
-      <p><strong>函数定义语法：</strong></p>
-      <pre><code>def function_name(parameters):
-    """函数文档字符串"""
-    # 函数体
-    return result</code></pre>
-      <p><strong>函数参数类型：</strong></p>
-      <ul>
-        <li>位置参数</li>
-        <li>默认参数</li>
-        <li>关键字参数</li>
-        <li>可变参数</li>
-      </ul>
-    `,
-    codeExample: `# 函数定义示例
-def greet(name, greeting="Hello"):
-    """打招呼函数"""
-    return f"{greeting}, {name}!"
-
-# 调用函数
-print(greet("张三"))
-print(greet("李四", "Hi"))
-
-# 计算阶乘的函数
-def factorial(n):
-    """计算n的阶乘"""
-    if n == 0 or n == 1:
-        return 1
-    else:
-        return n * factorial(n - 1)
-
-print(f"5的阶乘是: {factorial(5)}")`,
-    exercise: '编写一个函数，接收两个数字参数，返回它们的和、差、积、商。',
-    solution: `def calculate(a, b):
-    """计算两个数的四则运算"""
-    return {
-        'sum': a + b,
-        'difference': a - b,
-        'product': a * b,
-        'quotient': a / b if b != 0 else 'undefined'
-    }
-
-result = calculate(10, 2)
-print(result)`
-  }
-])
-
-// 计算当前选中的课程
+// 计算属性
 const currentLesson = computed(() => {
-  return lessons.value.find(lesson => lesson.id === activeLesson.value)
+  return lessons.value.find(lesson => lesson.id === activeLesson.value) || lessons.value[0]
 })
+
+// 生命周期
+onMounted(() => {
+  loadLessons()
+})
+
+// 加载课程数据
+const loadLessons = async () => {
+  loading.value = true
+  try {
+    // 这里可以根据实际的模块ID来获取课程
+    // 暂时假设基础语法模块的ID是1
+    const response = await learningApi.getCoursesByModule(1)
+    if (response.code === 200) {
+      // 将从后端获取的课程数据转换为Lesson接口的格式
+      lessons.value = response.data.map((course: any) => ({
+        id: course.id.toString(),
+        title: course.title,
+        description: course.description || '',
+        icon: 'el-icon-s-flag', // 暂时使用固定图标
+        completed: course.completed || false,
+        progress: course.completed ? 100 : 0,
+        theory: course.description || '',
+        codeExample: course.codeExample || '',
+        exercise: course.exercise || '',
+        solution: course.solution || ''
+      }))
+    } else {
+      ElMessage.error('加载课程失败')
+    }
+  } catch (error) {
+    ElMessage.error('加载课程失败')
+    console.error('加载课程失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 // 选择课程
 const selectLesson = (lessonId: string) => {
   activeLesson.value = lessonId
 }
 
-// 标记为完成
+// 标记课程完成
 const markAsCompleted = () => {
-  const lesson = lessons.value.find(l => l.id === activeLesson.value)
-  if (lesson) {
-    lesson.completed = true
-    lesson.progress = 100
-    ElMessage.success('课程标记为已完成！')
+  if (currentLesson.value) {
+    currentLesson.value.completed = !currentLesson.value.completed
+    currentLesson.value.progress = currentLesson.value.completed ? 100 : 0
+    ElMessage.success(currentLesson.value.completed ? '课程标记为已完成' : '取消已完成标记')
   }
 }
 
 // 运行代码
-const runCode = () => {
-  ElMessage.info('代码运行功能将在后续版本中实现')
+const runCode = async () => {
+  // 这里可以连接到后端的代码运行API
+  ElMessage.success('代码运行功能将在后续版本中实现')
 }
 
 // 复制代码
-const copyCode = async () => {
-  try {
-    await navigator.clipboard.writeText(currentLesson.value?.codeExample || '')
+const copyCode = () => {
+  if (currentLesson.value) {
+    navigator.clipboard.writeText(currentLesson.value.codeExample)
     ElMessage.success('代码已复制到剪贴板')
-  } catch (err) {
-    ElMessage.error('复制失败')
   }
 }
 
-// 显示答案
+// 查看答案
 const showSolution = () => {
-  ElMessage.info(`答案: ${currentLesson.value?.solution}`)
+  if (currentLesson.value) {
+    ElMessage.success('答案：' + currentLesson.value.solution)
+  }
 }
 </script>
 
