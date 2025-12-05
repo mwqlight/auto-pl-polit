@@ -1,0 +1,453 @@
+// 全局样式
+@import './variables.scss';
+
+// 重置样式
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// 基础样式
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, $bg-primary 0%, $bg-secondary 100%);
+  color: $text-primary;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: $border-radius-sm;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: $border-radius-sm;
+  transition: background $transition-normal;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.6);
+}
+
+// 链接样式
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-normal;
+
+  &:hover {
+    color: lighten($primary-color, 15%);
+    text-decoration: underline;
+  }
+}
+
+// 按钮基础样式
+.btn {
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $border-radius-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-normal;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: $primary-gradient;
+    color: white;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: $shadow-glow;
+    }
+  }
+
+  &.btn-secondary {
+    background: $bg-card;
+    color: $text-primary;
+    border: 1px solid $border-color;
+
+    &:hover:not(:disabled) {
+      background: $bg-card-hover;
+      border-color: $border-hover-color;
+    }
+  }
+
+  &.btn-success {
+    background: $success-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  &.btn-warning {
+    background: $warning-color;
+    color: darken($warning-color, 40%);
+
+    &:hover:not(:disabled) {
+      background: darken($warning-color, 10%);
+    }
+  }
+
+  &.btn-error {
+    background: $error-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: darken($error-color, 10%);
+    }
+  }
+}
+
+// 卡片样式
+.card {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  transition: all $transition-normal;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    @include card-hover;
+  }
+
+  &.card-glass {
+    @include glass-morphism;
+  }
+
+  .card-header {
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $border-color;
+
+    .card-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin: 0;
+    }
+
+    .card-subtitle {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      margin-top: $spacing-xs;
+    }
+  }
+
+  .card-body {
+    color: $text-secondary;
+  }
+
+  .card-footer {
+    margin-top: $spacing-md;
+    padding-top: $spacing-sm;
+    border-top: 1px solid $border-color;
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+  }
+}
+
+// 表单样式
+.form-group {
+  margin-bottom: $spacing-lg;
+
+  .form-label {
+    display: block;
+    margin-bottom: $spacing-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: $spacing-md;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    color: $text-primary;
+    font-size: $font-size-sm;
+    transition: all $transition-normal;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .form-text {
+    font-size: $font-size-xs;
+    color: $text-tertiary;
+    margin-top: $spacing-xs;
+  }
+
+  &.has-error {
+    .form-control {
+      border-color: $error-color;
+    }
+
+    .form-error {
+      color: $error-color;
+      font-size: $font-size-xs;
+      margin-top: $spacing-xs;
+    }
+  }
+}
+
+// 表格样式
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: $bg-card;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+
+  th, td {
+    padding: $spacing-md;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+  }
+
+  thead {
+    background: rgba(0, 212, 255, 0.1);
+
+    th {
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background $transition-normal;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &:last-child {
+        td {
+          border-bottom: none;
+        }
+      }
+    }
+
+    td {
+      color: $text-secondary;
+    }
+  }
+}
+
+// 状态指示器
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+
+  &.status-online {
+    background: rgba($status-online, 0.1);
+    color: $status-online;
+  }
+
+  &.status-offline {
+    background: rgba($status-offline, 0.1);
+    color: $status-offline;
+  }
+
+  &.status-warning {
+    background: rgba($status-warning, 0.1);
+    color: $status-warning;
+  }
+
+  &.status-info {
+    background: rgba($status-info, 0.1);
+    color: $status-info;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+
+    &.online { background: $status-online; }
+    &.offline { background: $status-offline; }
+    &.warning { background: $status-warning; }
+    &.info { background: $status-info; }
+  }
+}
+
+// 加载动画
+.loading {
+  @include flex-center;
+  
+  .loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  &.loading-large .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// 响应式工具类
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  @include flex-center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// 响应式断点
+@include responsive($breakpoint-md) {
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  .visible-mobile {
+    display: block !important;
+  }
+}
+
+// 高科技特效
+.glass-effect {
+  @include glass-morphism;
+}
+
+.neon-glow {
+  box-shadow: $neon-glow;
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glow-animation {
+  animation: glow 2s ease-in-out infinite;
+}
+
+// 代码高亮样式
+.code-block {
+  background: $code-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
+  font-family: 'Courier New', monospace;
+  font-size: $font-size-sm;
+  line-height: 1.5;
+  overflow-x: auto;
+
+  .code-keyword {
+    color: $code-keyword;
+  }
+
+  .code-string {
+    color: $code-string;
+  }
+
+  .code-number {
+    color: $code-number;
+  }
+
+  .code-comment {
+    color: $code-comment;
+    font-style: italic;
+  }
+}
+
+// 打印样式
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

@@ -1,0 +1,145 @@
+// 颜色变量
+$primary-color: #00d4ff;
+$primary-gradient: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+$secondary-color: #ff6b6b;
+$success-color: #00ff88;
+$warning-color: #ffd700;
+$error-color: #ff4757;
+
+// 背景颜色
+$bg-primary: #0c0c0c;
+$bg-secondary: #1a1a2e;
+$bg-tertiary: #16213e;
+$bg-card: rgba(255, 255, 255, 0.05);
+$bg-card-hover: rgba(255, 255, 255, 0.1);
+
+// 边框颜色
+$border-color: rgba(255, 255, 255, 0.1);
+$border-hover-color: rgba(0, 212, 255, 0.3);
+
+// 文字颜色
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-tertiary: rgba(255, 255, 255, 0.5);
+$text-muted: rgba(255, 255, 255, 0.3);
+
+// 阴影
+$shadow-primary: 0 4px 20px rgba(0, 0, 0, 0.3);
+$shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
+$shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+
+// 间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// 边框半径
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+
+// 字体大小
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-xxl: 24px;
+$font-size-xxxl: 28px;
+
+// 字体权重
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 过渡动画
+$transition-fast: 0.15s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// 响应式断点
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+// 代码编辑器颜色
+$code-bg: rgba(16, 18, 27, 0.8);
+$code-text: #00ff88;
+$code-comment: rgba(255, 255, 255, 0.5);
+$code-keyword: #ff6b6b;
+$code-string: #ffd700;
+$code-number: #00d4ff;
+
+// 状态指示器
+$status-online: #00ff88;
+$status-offline: #ff4757;
+$status-warning: #ffd700;
+$status-info: #00d4ff;
+
+// 组件特定变量
+$header-height: 60px;
+$sidebar-width: 280px;
+$footer-height: 50px;
+
+// 高科技效果
+$neon-glow: 0 0 10px $primary-color, 0 0 20px $primary-color, 0 0 30px $primary-color;
+$glass-effect: rgba(255, 255, 255, 0.1);
+$glass-border: 1px solid rgba(255, 255, 255, 0.2);
+
+// 动画关键帧
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px $primary-color; }
+  50% { box-shadow: 0 0 20px $primary-color; }
+  100% { box-shadow: 0 0 5px $primary-color; }
+}
+
+// 混合器
+@mixin glass-morphism {
+  background: $glass-effect;
+  backdrop-filter: blur(10px);
+  border: $glass-border;
+}
+
+@mixin card-hover {
+  transform: translateY(-4px);
+  box-shadow: $shadow-hover;
+  border-color: $border-hover-color;
+}
+
+@mixin responsive($breakpoint) {
+  @media (max-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
