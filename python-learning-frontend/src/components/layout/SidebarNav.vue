@@ -39,7 +39,7 @@
             class="action-btn"
             @click="quickConvert"
           >
-            <el-icon><Magic /></el-icon>
+            <el-icon><MagicStick /></el-icon>
             快速转换
           </el-button>
           <el-button 
@@ -48,7 +48,7 @@
             class="action-btn"
             @click="startLearning"
           >
-            <el-icon><PlayCircle /></el-icon>
+            <el-icon><VideoPlay /></el-icon>
             开始学习
           </el-button>
         </div>
@@ -79,9 +79,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  Magic,
-  PlayCircle,
-  Code,
+  MagicStick,
+  VideoPlay,
+  Cpu,
   School,
   DataBoard
 } from '@element-plus/icons-vue'
@@ -93,7 +93,7 @@ const modules = ref([
     id: 'converter',
     title: '代码转换工作站',
     description: 'Java到Python智能转换',
-    icon: Code,
+    icon: Cpu,
     progress: 75
   },
   {

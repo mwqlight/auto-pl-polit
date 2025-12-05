@@ -88,6 +88,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -128,27 +129,19 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    // 模拟登录请求
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟用户数据
-    const mockUser = {
-      id: 1,
-      username: loginForm.username,
-      email: `${loginForm.username}@example.com`,
-      level: 1,
-      experience: 0,
-      totalLearningTime: 0,
-      completedModules: 0,
-      joinDate: new Date().toISOString(),
-      lastLogin: new Date().toISOString()
-    }
-    
-    const mockToken = 'mock-jwt-token-' + Date.now()
+    // 调用后端登录API
+    const response = await userApi.login(loginForm)
     
     // 存储用户信息和token
-    userStore.setUser(mockUser)
-    userStore.setToken(mockToken)
+    userStore.setUser(response.data.user)
+    userStore.setToken(response.data.token)
+    
+    // 记住用户名
+    if (rememberMe.value) {
+      localStorage.setItem('rememberedUsername', loginForm.username)
+    } else {
+      localStorage.removeItem('rememberedUsername')
+    }
     
     ElMessage.success('登录成功！')
     

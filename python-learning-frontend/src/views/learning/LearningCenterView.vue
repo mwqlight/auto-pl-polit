@@ -101,7 +101,7 @@
             <h2>{{ currentChapter.title }}</h2>
             <div class="chapter-actions">
               <el-button size="small" @click="toggleCodeExample">
-                <el-icon><Code /></el-icon>
+                <el-icon><Cpu /></el-icon>
                 {{ showCodeExample ? '隐藏代码' : '显示代码' }}
               </el-button>
               <el-button size="small" @click="runCodeExample" :loading="runningCode">
@@ -182,7 +182,7 @@ import { ElMessage } from 'element-plus'
 import {
   Reading,
   Document,
-  Code,
+  Cpu,
   VideoPlay,
   Check,
   ArrowLeft,
