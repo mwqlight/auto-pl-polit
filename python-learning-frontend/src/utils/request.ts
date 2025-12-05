@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useUserStore } from '@/store/user'
+import { useUserStore } from '@/store'
 
 // 请求配置
 const config: AxiosRequestConfig = {

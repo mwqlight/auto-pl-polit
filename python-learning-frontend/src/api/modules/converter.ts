@@ -15,7 +15,7 @@ export const converterApi = {
    * 转换Java代码为Python代码
    */
   convertJavaToPython: (data: CodeConversionRequest): Promise<ApiResponse<CodeConversionResponse>> => {
-    return request.post('/api/v1/converter/java-to-python', data)
+    return request.post('/v1/converter/java-to-python', data)
   },
 
   /**
@@ -27,7 +27,7 @@ export const converterApi = {
     page: number
     size: number
   }>> => {
-    return request.get('/api/v1/converter/history', {
+    return request.get('/v1/converter/history', {
       params: { page, size }
     })
   },
@@ -36,35 +36,35 @@ export const converterApi = {
    * 获取转换历史详情
    */
   getConversionDetail: (historyId: number): Promise<ApiResponse<ConversionHistory>> => {
-    return request.get(`/api/v1/converter/history/${historyId}`)
+    return request.get(`/v1/converter/history/${historyId}`)
   },
 
   /**
    * 删除转换历史
    */
   deleteConversionHistory: (historyId: number): Promise<ApiResponse<void>> => {
-    return request.delete(`/api/v1/converter/history/${historyId}`)
+    return request.delete(`/v1/converter/history/${historyId}`)
   },
 
   /**
    * 清空转换历史
    */
   clearConversionHistory: (): Promise<ApiResponse<void>> => {
-    return request.delete('/api/v1/converter/history')
+    return request.delete('/v1/converter/history')
   },
 
   /**
    * 获取转换选项
    */
   getConversionOptions: (): Promise<ApiResponse<ConversionOptions>> => {
-    return request.get('/api/v1/converter/options')
+    return request.get('/v1/converter/options')
   },
 
   /**
    * 保存转换选项
    */
   saveConversionOptions: (options: ConversionOptions): Promise<ApiResponse<void>> => {
-    return request.put('/api/v1/converter/options', options)
+    return request.put('/v1/converter/options', options)
   },
 
   /**
@@ -79,7 +79,7 @@ export const converterApi = {
       severity: 'error' | 'warning'
     }>
   }>> => {
-    return request.post('/api/v1/converter/validate/java', { code })
+    return request.post('/v1/converter/validate/java', { code })
   },
 
   /**
@@ -94,7 +94,7 @@ export const converterApi = {
       severity: 'error' | 'warning'
     }>
   }>> => {
-    return request.post('/api/v1/converter/validate/python', { code })
+    return request.post('/v1/converter/validate/python', { code })
   },
 
   /**
@@ -109,6 +109,6 @@ export const converterApi = {
       count: number
     }>
   }>> => {
-    return request.get('/api/v1/converter/stats')
+    return request.get('/v1/converter/stats')
   }
 }

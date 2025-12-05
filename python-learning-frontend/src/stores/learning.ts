@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LearningModule, Course, LearningProgress, QuizScore } from '@/types/api'
-import { request } from '@/utils/request'
+import { learningApi } from '@/api/modules/learning'
 
 export const useLearningStore = defineStore('learning', () => {
   // 状态
@@ -37,7 +37,7 @@ export const useLearningStore = defineStore('learning', () => {
   // 获取学习模块列表
   const fetchModules = async () => {
     try {
-      const response = await request.get('/api/learning/modules')
+      const response = await learningApi.getModules()
       
       if (response.code === 200) {
         modules.value = response.data
@@ -56,7 +56,7 @@ export const useLearningStore = defineStore('learning', () => {
   // 获取课程详情
   const fetchCourse = async (courseId: string) => {
     try {
-      const response = await request.get(`/api/learning/courses/${courseId}`)
+      const response = await learningApi.getCourse(parseInt(courseId))
       
       if (response.code === 200) {
         currentCourse.value = response.data
@@ -75,10 +75,7 @@ export const useLearningStore = defineStore('learning', () => {
   // 更新学习进度
   const updateProgress = async (courseId: string, newProgress: number) => {
     try {
-      const response = await request.post('/api/learning/progress', {
-        courseId,
-        progress: newProgress
-      })
+      const response = await learningApi.updateProgress(parseInt(courseId), newProgress)
       
       if (response.code === 200) {
         // 更新本地进度
@@ -162,7 +159,7 @@ export const useLearningStore = defineStore('learning', () => {
   // 获取学习统计
   const fetchLearningStats = async () => {
     try {
-      const response = await request.get('/api/learning/stats')
+      const response = await learningApi.getLearningStats()
       
       if (response.code === 200) {
         return { success: true, data: response.data }

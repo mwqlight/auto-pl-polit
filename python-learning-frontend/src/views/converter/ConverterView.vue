@@ -142,16 +142,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import {
-  Monitor,
-  Delete,
-  DocumentCopy,
-  Right,
-  CopyDocument,
-  Download
+import { 
+  Monitor, 
+  Delete, 
+  DocumentCopy, 
+  Right, 
+  CopyDocument, 
+  Download 
 } from '@element-plus/icons-vue'
+import { converterApi } from '@/api/modules/converter'
+import type { CodeConversionRequest } from '@/types/api'
 
 // 响应式数据
 const javaCode = ref('')
@@ -171,11 +173,7 @@ const conversionSettings = reactive({
   typeAnnotations: true
 })
 
-const conversionHistory = ref([
-  { id: 1, title: 'HelloWorld示例', time: '2分钟前' },
-  { id: 2, title: '用户管理类', time: '1小时前' },
-  { id: 3, title: '数据处理函数', time: '3小时前' }
-])
+const conversionHistory = ref([])
 
 // 示例代码
 const exampleCode = `public class HelloWorld {
@@ -212,39 +210,32 @@ const convertCode = async () => {
   converting.value = true
   
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 简单的转换逻辑（实际项目中应该调用后端API）
-    const converted = javaCode.value
-      .replace(/public class/g, 'class')
-      .replace(/public static void main/g, 'def main')
-      .replace(/System\.out\.println/g, 'print')
-      .replace(/int /g, '')
-      .replace(/for \(int/g, 'for')
-      .replace(/\+\+/g, '+= 1')
-      .replace(/\/\/.*$/gm, '# $&'.replace(/\/\//, ''))
+    // 构造转换请求数据
+    const requestData: CodeConversionRequest = {
+      javaCode: javaCode.value,
+      options: {
+        codeStyle: conversionSettings.codeStyle,
+        optimizationLevel: conversionSettings.optimizationLevel,
+        errorHandling: conversionSettings.errorHandling,
+        typeAnnotations: conversionSettings.typeAnnotations
+      }
+    }
 
-    pythonCode.value = `class HelloWorld:
-    @staticmethod
-    def main():
-        print("Hello, World!")
-        
-        # 计算1到10的和
-        sum = 0
-        for i in range(1, 11):
-            sum += i
-        print(f"Sum: {sum}")
+    // 调用真实的后端API
+    const response = await converterApi.convertJavaToPython(requestData)
 
-if __name__ == "__main__":
-    HelloWorld.main()`
+    if (response.code === 200) {
+      pythonCode.value = response.data.pythonCode
 
-    // 更新统计信息
-    conversionStats.totalLines = pythonCode.value.split('\n').length
-    conversionStats.successRate = 95
-    conversionStats.timeCost = Math.floor(Math.random() * 200) + 100
+      // 更新统计信息
+      conversionStats.totalLines = pythonCode.value.split('\n').length
+      conversionStats.successRate = response.data.successRate || 100
+      conversionStats.timeCost = response.data.timeCost || 0
 
-    ElMessage.success('代码转换成功')
+      ElMessage.success('代码转换成功')
+    } else {
+      ElMessage.error(response.message || '转换失败')
+    }
   } catch (error) {
     ElMessage.error('转换失败，请重试')
     console.error('转换错误:', error)
@@ -287,6 +278,44 @@ const loadHistory = (item: any) => {
   // 加载历史记录的逻辑
   ElMessage.info(`加载历史记录: ${item.title}`)
 }
+
+// 加载转换历史
+const loadConversionHistory = async () => {
+  try {
+    const response = await converterApi.getConversionHistory()
+    if (response.code === 200) {
+      conversionHistory.value = response.data.items.map((item: any) => ({
+        id: item.id,
+        title: item.title || '未命名转换',
+        time: formatTime(item.createdAt)
+      }))
+    }
+  } catch (error) {
+    console.error('加载转换历史失败:', error)
+  }
+}
+
+// 格式化时间
+const formatTime = (timestamp: string) => {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  
+  if (diff < 60000) { // 小于1分钟
+    return '刚刚'
+  } else if (diff < 3600000) { // 小于1小时
+    return `${Math.floor(diff / 60000)}分钟前`
+  } else if (diff < 86400000) { // 小于24小时
+    return `${Math.floor(diff / 3600000)}小时前`
+  } else {
+    return date.toLocaleDateString()
+  }
+}
+
+// 组件挂载时加载转换历史
+onMounted(() => {
+  loadConversionHistory()
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, LoginRequest, RegisterRequest, UpdateUserRequest, ChangePasswordRequest, UserSettings } from '@/types/api'
-import { request } from '@/utils/request'
+import { userApi } from '@/api/modules/user'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -44,8 +44,7 @@ export const useUserStore = defineStore('user', () => {
   // 登录方法
   const login = async (loginData: LoginRequest) => {
     try {
-      // 模拟登录请求
-      const response = await request.post('/api/auth/login', loginData)
+      const response = await userApi.login(loginData)
       
       if (response.code === 200) {
         const { user: userData, token: authToken, refreshToken: refresh } = response.data
@@ -76,7 +75,7 @@ export const useUserStore = defineStore('user', () => {
   // 注册方法
   const register = async (registerData: RegisterRequest) => {
     try {
-      const response = await request.post('/api/auth/register', registerData)
+      const response = await userApi.register(registerData)
       
       if (response.code === 200) {
         return { success: true, data: response.data }
@@ -93,7 +92,7 @@ export const useUserStore = defineStore('user', () => {
   const logout = async () => {
     try {
       // 调用登出接口
-      await request.post('/api/auth/logout')
+      await userApi.logout()
     } catch (error) {
       console.error('登出失败:', error)
     } finally {
@@ -116,7 +115,7 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const fetchUserInfo = async () => {
     try {
-      const response = await request.get('/api/user/info')
+      const response = await userApi.getUserInfo()
       
       if (response.code === 200) {
         user.value = response.data
@@ -134,7 +133,7 @@ export const useUserStore = defineStore('user', () => {
   // 更新用户信息
   const updateUserInfo = async (userData: UpdateUserRequest) => {
     try {
-      const response = await request.put('/api/user/info', userData)
+      const response = await userApi.updateUserInfo(userData)
       
       if (response.code === 200) {
         user.value = { ...user.value, ...userData }
@@ -152,7 +151,7 @@ export const useUserStore = defineStore('user', () => {
   // 修改密码
   const changePassword = async (passwordData: ChangePasswordRequest) => {
     try {
-      const response = await request.post('/api/user/change-password', passwordData)
+      const response = await userApi.changePassword(passwordData)
       
       if (response.code === 200) {
         return { success: true, data: response.data }
@@ -184,7 +183,7 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('userSettings', JSON.stringify(settings.value))
       
       // 同步到服务器
-      await request.put('/api/user/settings', settings.value)
+      await userApi.updateUserSettings(settings.value)
       
       return { success: true }
     } catch (error) {
@@ -200,7 +199,7 @@ export const useUserStore = defineStore('user', () => {
         throw new Error('没有刷新token')
       }
       
-      const response = await request.post('/api/auth/refresh', {
+      const response = await userApi.refreshToken({
         refreshToken: refreshToken.value
       })
       
