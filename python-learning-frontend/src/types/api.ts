@@ -10,6 +10,10 @@ export interface BaseResponse<T = any> {
   timestamp: number
 }
 
+// API响应类型（兼容不同命名风格）
+export interface ApiResponse<T = any> extends BaseResponse<T> {
+}
+
 // 分页响应类型
 export interface PaginationResponse<T = any> {
   items: T[]
@@ -93,7 +97,7 @@ export interface LearningModule {
 }
 
 // 课程类型
-export interface Course {
+export interface Lesson {
   id: string
   moduleId: string
   title: string
@@ -142,7 +146,7 @@ export interface TestCase {
 // 学习进度类型
 export interface LearningProgress {
   userId: number
-  courseId: string
+  lessonId: string
   progress: number
   completed: boolean
   lastStudyTime: string
@@ -221,6 +225,35 @@ export interface KnowledgeBaseItem {
   author?: string
 }
 
+// 知识库文章类型
+export interface KnowledgeBaseArticle {
+  id: number
+  title: string
+  content: string
+  categoryId: number
+  categoryName: string
+  tags: string[]
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  viewCount: number
+  likeCount: number
+  favoriteCount: number
+  commentCount: number
+  lastUpdated: string
+  author?: string
+  isLiked?: boolean
+  isFavorited?: boolean
+}
+
+// 知识库分类类型
+export interface KnowledgeBaseCategory {
+  id: number
+  name: string
+  description?: string
+  articleCount: number
+  icon?: string
+  order: number
+}
+
 // 搜索请求
 export interface SearchRequest {
   query: string
@@ -292,7 +325,7 @@ export interface Achievement {
 export interface UserStats {
   userId: number
   totalLearningTime: number
-  completedCourses: number
+  completedLessons: number
   conversionCount: number
   achievementCount: number
   averageQuizScore: number
@@ -366,8 +399,8 @@ export interface ApiMethods {
   
   // 学习相关
   getLearningModules: () => Promise<LearningModule[]>
-  getCourse: (courseId: string) => Promise<Course>
-  updateProgress: (data: { courseId: string; progress: number }) => Promise<BaseResponse>
+  getLesson: (lessonId: string) => Promise<Lesson>
+  updateProgress: (data: { lessonId: string; progress: number }) => Promise<BaseResponse>
   
   // 代码转换
   convertCode: (data: CodeConversionRequest) => Promise<CodeConversionResponse>
@@ -376,6 +409,24 @@ export interface ApiMethods {
   // 知识库
   searchKnowledge: (params: SearchRequest) => Promise<SearchResponse<KnowledgeBaseItem>>
   getKnowledgeItem: (id: string) => Promise<KnowledgeBaseItem>
+  getAllArticles: () => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  getArticleById: (id: number) => Promise<ApiResponse<KnowledgeBaseArticle>>
+  getArticlesByCategory: (categoryId: number) => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  searchArticles: (keyword: string) => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  getAllCategories: () => Promise<ApiResponse<KnowledgeBaseCategory[]>>
+  getCategoryById: (id: number) => Promise<ApiResponse<KnowledgeBaseCategory>>
+  getPopularArticles: (limit?: number) => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  getLatestArticles: (limit?: number) => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  searchKnowledgeBase: (data: SearchRequest) => Promise<ApiResponse<SearchResponse>>
+  recordArticleView: (articleId: number) => Promise<ApiResponse<void>>
+  likeArticle: (articleId: number) => Promise<ApiResponse<void>>
+  unlikeArticle: (articleId: number) => Promise<ApiResponse<void>>
+  favoriteArticle: (articleId: number) => Promise<ApiResponse<void>>
+  unfavoriteArticle: (articleId: number) => Promise<ApiResponse<void>>
+  getFavoriteArticles: (userId?: number) => Promise<ApiResponse<KnowledgeBaseArticle[]>>
+  getArticleComments: (articleId: number) => Promise<ApiResponse<any[]>>
+  addArticleComment: (articleId: number, content: string) => Promise<ApiResponse<any>>
+  deleteArticleComment: (commentId: number) => Promise<ApiResponse<void>>
   
   // 文件操作
   uploadFile: (data: FileUploadRequest, onProgress?: UploadProgressCallback) => Promise<FileUploadResponse>
@@ -408,7 +459,7 @@ export enum ApiErrorCode {
   USER_NOT_FOUND = 10001,
   USER_EXISTS = 10002,
   INVALID_CREDENTIALS = 10003,
-  COURSE_NOT_FOUND = 10004,
+  LESSON_NOT_FOUND = 10004,
   CONVERSION_FAILED = 10005,
   FILE_UPLOAD_FAILED = 10006
 }

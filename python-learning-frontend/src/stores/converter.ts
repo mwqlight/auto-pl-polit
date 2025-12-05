@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CodeConversionRequest, CodeConversionResponse, ConversionHistory, ConversionOptions } from '@/types/api'
-import { request } from '@/utils/request'
+import { converterApi } from '@/api/modules/converter'
 
 export const useConverterStore = defineStore('converter', () => {
   // 状态
@@ -60,26 +60,27 @@ export const useConverterStore = defineStore('converter', () => {
     
     try {
       const requestData: CodeConversionRequest = {
-        javaCode: codeToConvert,
+        sourceCode: codeToConvert,
+        sourceLanguage: 'java',
         targetLanguage: 'python',
         options: optionsToUse
       }
 
-      const response = await request.post('/api/converter/convert', requestData)
+      const response = await converterApi.convertCode(requestData)
       
       if (response.code === 200) {
         const conversionResponse: CodeConversionResponse = response.data
         
-        pythonCode.value = conversionResponse.pythonCode
-        conversionTime.value = conversionResponse.conversionTime
+        pythonCode.value = conversionResponse.convertedCode
+        conversionTime.value = conversionResponse.executionTime
         
         // 添加到历史记录
         const historyItem: ConversionHistory = {
           id: generateId(),
           userId: 1, // 模拟用户ID
           javaCode: codeToConvert,
-          pythonCode: conversionResponse.pythonCode,
-          conversionTime: conversionResponse.conversionTime,
+          pythonCode: conversionResponse.convertedCode,
+          conversionTime: conversionResponse.executionTime,
           createdAt: new Date().toISOString(),
           tags: extractTags(codeToConvert)
         }
@@ -160,11 +161,21 @@ export const useConverterStore = defineStore('converter', () => {
   // 获取转换历史
   const fetchConversionHistory = async () => {
     try {
-      const response = await request.get('/api/converter/history')
+      const response = await converterApi.getConversionHistory(1, 10)
       
       if (response.code === 200) {
-        conversionHistory.value = response.data
-        return { success: true, data: response.data }
+        // 转换后端返回的历史记录格式
+        const historyItems: ConversionHistory[] = response.data.map((item: any) => ({
+          id: item.id.toString(),
+          userId: 1,
+          javaCode: item.sourceCodePreview,
+          pythonCode: item.targetCodePreview,
+          conversionTime: item.executionTime,
+          createdAt: item.timestamp,
+          tags: []
+        }))
+        conversionHistory.value = historyItems
+        return { success: true, data: historyItems }
       } else {
         return { success: false, error: response.message }
       }
@@ -183,9 +194,23 @@ export const useConverterStore = defineStore('converter', () => {
   }
 
   // 清空历史记录
-  const clearHistory = () => {
-    conversionHistory.value = []
-    localStorage.removeItem('conversionHistory')
+  const clearHistory = async () => {
+    try {
+      const response = await converterApi.clearConversionHistory(1)
+      
+      if (response.code === 200) {
+        conversionHistory.value = []
+        localStorage.removeItem('conversionHistory')
+        return { success: true }
+      } else {
+        return { success: false, error: response.message }
+      }
+    } catch (error) {
+      console.error('清空历史记录失败:', error)
+      conversionHistory.value = []
+      localStorage.removeItem('conversionHistory')
+      return { success: true }
+    }
   }
 
   // 更新转换选项

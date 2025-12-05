@@ -19,6 +19,7 @@
     "monaco-editor": "^0.40.0",
     "pinia": "^2.1.0",
     "three": "^0.152.0",
+    "tsparticles": "^3.9.1",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0"
   },

@@ -12,23 +12,18 @@ import type {
  */
 export const converterApi = {
   /**
-   * 转换Java代码为Python代码
+   * 转换代码
    */
-  convertJavaToPython: (data: CodeConversionRequest): Promise<ApiResponse<CodeConversionResponse>> => {
-    return request.post('/api/v1/converter/java-to-python', data)
+  convertCode: (data: CodeConversionRequest): Promise<ApiResponse<CodeConversionResponse>> => {
+    return request.post('/api/v1/converter/convert', data)
   },
 
   /**
    * 获取转换历史
    */
-  getConversionHistory: (page: number = 1, size: number = 10): Promise<ApiResponse<{
-    items: ConversionHistory[]
-    total: number
-    page: number
-    size: number
-  }>> => {
+  getConversionHistory: (userId: number = 1, limit: number = 10): Promise<ApiResponse<ConversionHistory[]>> => {
     return request.get('/api/v1/converter/history', {
-      params: { page, size }
+      params: { userId, limit }
     })
   },
 
@@ -49,8 +44,26 @@ export const converterApi = {
   /**
    * 清空转换历史
    */
-  clearConversionHistory: (): Promise<ApiResponse<void>> => {
-    return request.delete('/api/v1/converter/history')
+  clearConversionHistory: (userId: number = 1): Promise<ApiResponse<void>> => {
+    return request.delete('/api/v1/converter/history', {
+      params: { userId }
+    })
+  },
+
+  /**
+   * 获取转换统计
+   */
+  getConversionStats: (userId: number = 1): Promise<ApiResponse<{
+    totalConversions: number
+    totalSuccess: number
+    totalFailed: number
+    averageScore: number
+    totalLinesProcessed: number
+    totalExecutionTime: number
+  }>> => {
+    return request.get('/api/v1/converter/stats', {
+      params: { userId }
+    })
   },
 
   /**

@@ -2,7 +2,7 @@ import request from '@/utils/request'
 import type { 
   ApiResponse, 
   LearningModule, 
-  Course, 
+  Lesson, 
   LearningProgress,
   QuizResult,
   PaginationResponse
@@ -15,29 +15,78 @@ export const learningApi = {
   /**
    * 获取所有学习模块
    */
-  getModules: (): Promise<ApiResponse<LearningModule[]>> => {
-    return request.get('/api/v1/learning/modules')
+  getAllModules: (): Promise<ApiResponse<LearningModule[]>> => {
+    return request.get('/api/v1/learning-modules')
   },
 
   /**
-   * 获取模块详情
+   * 获取已发布的学习模块
    */
-  getModule: (moduleId: number): Promise<ApiResponse<LearningModule>> => {
-    return request.get(`/api/v1/learning/modules/${moduleId}`)
+  getPublishedModules: (): Promise<ApiResponse<LearningModule[]>> => {
+    return request.get('/api/v1/learning-modules/published')
   },
 
   /**
-   * 获取模块下的课程列表
+   * 根据ID获取学习模块
    */
-  getCoursesByModule: (moduleId: number): Promise<ApiResponse<Course[]>> => {
-    return request.get(`/api/v1/learning/modules/${moduleId}/courses`)
+  getModuleById: (id: number): Promise<ApiResponse<LearningModule>> => {
+    return request.get(`/api/v1/learning-modules/${id}`)
   },
 
   /**
-   * 获取课程详情
+   * 根据难度级别获取学习模块
    */
-  getCourse: (courseId: number): Promise<ApiResponse<Course>> => {
-    return request.get(`/api/v1/learning/courses/${courseId}`)
+  getModulesByDifficulty: (difficulty: string): Promise<ApiResponse<LearningModule[]>> => {
+    return request.get(`/api/v1/learning-modules/difficulty/${difficulty}`)
+  },
+
+  /**
+   * 搜索学习模块
+   */
+  searchModules: (keyword: string): Promise<ApiResponse<LearningModule[]>> => {
+    return request.get('/api/v1/learning-modules/search', { params: { keyword } })
+  },
+
+  /**
+   * 获取所有课程
+   */
+  getAllLessons: (): Promise<ApiResponse<Lesson[]>> => {
+    return request.get('/api/v1/lessons')
+  },
+
+  /**
+   * 根据模块ID获取课程
+   */
+  getLessonsByModuleId: (moduleId: number): Promise<ApiResponse<Lesson[]>> => {
+    return request.get(`/api/v1/lessons/module/${moduleId}`)
+  },
+
+  /**
+   * 根据ID获取课程
+   */
+  getLessonById: (id: number): Promise<ApiResponse<Lesson>> => {
+    return request.get(`/api/v1/lessons/${id}`)
+  },
+
+  /**
+   * 获取免费课程
+   */
+  getFreeLessons: (): Promise<ApiResponse<Lesson[]>> => {
+    return request.get('/api/v1/lessons/free')
+  },
+
+  /**
+   * 搜索课程
+   */
+  searchLessons: (keyword: string): Promise<ApiResponse<Lesson[]>> => {
+    return request.get('/api/v1/lessons/search', { params: { keyword } })
+  },
+
+  /**
+   * 获取课程详情（包含代码示例）
+   */
+  getLessonDetail: (id: number): Promise<ApiResponse<Lesson>> => {
+    return request.get(`/api/v1/lessons/${id}/detail`)
   },
 
   /**
@@ -50,44 +99,35 @@ export const learningApi = {
   /**
    * 更新学习进度
    */
-  updateProgress: (courseId: number, progress: number): Promise<ApiResponse<void>> => {
-    return request.put(`/api/v1/learning/courses/${courseId}/progress`, { progress })
+  updateProgress: (lessonId: number, progress: number): Promise<ApiResponse<void>> => {
+    return request.put(`/api/v1/learning/lessons/${lessonId}/progress`, { progress })
   },
 
   /**
    * 标记课程完成
    */
-  completeCourse: (courseId: number): Promise<ApiResponse<void>> => {
-    return request.post(`/api/v1/learning/courses/${courseId}/complete`)
+  completeLesson: (lessonId: number): Promise<ApiResponse<void>> => {
+    return request.post(`/api/v1/learning/lessons/${lessonId}/complete`)
   },
 
   /**
    * 提交测验结果
    */
-  submitQuiz: (courseId: number, score: number, answers: any[]): Promise<ApiResponse<QuizResult>> => {
-    return request.post(`/api/v1/learning/courses/${courseId}/quiz`, { score, answers })
+  submitQuiz: (lessonId: number, score: number, answers: any[]): Promise<ApiResponse<QuizResult>> => {
+    return request.post(`/api/v1/learning/lessons/${lessonId}/quiz`, { score, answers })
   },
 
   /**
    * 获取测验历史
    */
-  getQuizHistory: (courseId: number): Promise<ApiResponse<QuizResult[]>> => {
-    return request.get(`/api/v1/learning/courses/${courseId}/quiz-history`)
+  getQuizHistory: (lessonId: number): Promise<ApiResponse<QuizResult[]>> => {
+    return request.get(`/api/v1/learning/lessons/${lessonId}/quiz-history`)
   },
 
   /**
    * 记录学习时间
    */
-  recordLearningTime: (courseId: number, duration: number): Promise<ApiResponse<void>> => {
-    return request.post(`/api/v1/learning/courses/${courseId}/time`, { duration })
-  },
-
-  /**
-   * 搜索课程
-   */
-  searchCourses: (keyword: string, page: number = 1, size: number = 10): Promise<ApiResponse<PaginationResponse<Course>>> => {
-    return request.get('/api/v1/learning/courses/search', {
-      params: { keyword, page, size }
-    })
+  recordLearningTime: (lessonId: number, duration: number): Promise<ApiResponse<void>> => {
+    return request.post(`/api/v1/learning/lessons/${lessonId}/time`, { duration })
   }
 }
