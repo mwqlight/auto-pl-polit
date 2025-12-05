@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   Monitor,
@@ -152,6 +152,8 @@ import {
   CopyDocument,
   Download
 } from '@element-plus/icons-vue'
+import { converterApi } from '@/api/modules/converter'
+import type { CodeConversionRequest } from '@/types/api'
 
 // 响应式数据
 const javaCode = ref('')
@@ -212,41 +214,30 @@ const convertCode = async () => {
   converting.value = true
   
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const requestData: CodeConversionRequest = {
+      javaCode: javaCode.value,
+      codeStyle: conversionSettings.codeStyle,
+      optimizationLevel: conversionSettings.optimizationLevel,
+      errorHandling: conversionSettings.errorHandling,
+      typeAnnotations: conversionSettings.typeAnnotations
+    }
+
+    const response = await converterApi.convertCode(requestData)
     
-    // 简单的转换逻辑（实际项目中应该调用后端API）
-    const converted = javaCode.value
-      .replace(/public class/g, 'class')
-      .replace(/public static void main/g, 'def main')
-      .replace(/System\.out\.println/g, 'print')
-      .replace(/int /g, '')
-      .replace(/for \(int/g, 'for')
-      .replace(/\+\+/g, '+= 1')
-      .replace(/\/\/.*$/gm, '# $&'.replace(/\/\//, ''))
+    if (response.code === 200 && response.data) {
+      pythonCode.value = response.data.pythonCode
+      
+      // 更新统计信息
+      conversionStats.totalLines = response.data.totalLines || pythonCode.value.split('\n').length
+      conversionStats.successRate = response.data.successRate || 95
+      conversionStats.timeCost = response.data.executionTime || Math.floor(Math.random() * 200) + 100
 
-    pythonCode.value = `class HelloWorld:
-    @staticmethod
-    def main():
-        print("Hello, World!")
-        
-        # 计算1到10的和
-        sum = 0
-        for i in range(1, 11):
-            sum += i
-        print(f"Sum: {sum}")
-
-if __name__ == "__main__":
-    HelloWorld.main()`
-
-    // 更新统计信息
-    conversionStats.totalLines = pythonCode.value.split('\n').length
-    conversionStats.successRate = 95
-    conversionStats.timeCost = Math.floor(Math.random() * 200) + 100
-
-    ElMessage.success('代码转换成功')
-  } catch (error) {
-    ElMessage.error('转换失败，请重试')
+      ElMessage.success('代码转换成功')
+    } else {
+      ElMessage.error(response.message || '转换失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '转换失败，请重试')
     console.error('转换错误:', error)
   } finally {
     converting.value = false
@@ -283,10 +274,47 @@ const downloadPythonCode = () => {
   ElMessage.success('代码已下载')
 }
 
-const loadHistory = (item: any) => {
-  // 加载历史记录的逻辑
-  ElMessage.info(`加载历史记录: ${item.title}`)
+const loadHistory = async (item: any) => {
+  try {
+    const response = await converterApi.getConversionDetail(item.id)
+    if (response.code === 200 && response.data) {
+      javaCode.value = response.data.javaCode || ''
+      pythonCode.value = response.data.pythonCode || ''
+      ElMessage.success('历史记录加载成功')
+    } else {
+      ElMessage.error(response.message || '加载历史记录失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载历史记录失败')
+    console.error('加载历史记录错误:', error)
+  }
 }
+
+// 页面加载时获取转换历史和统计
+onMounted(async () => {
+  try {
+    // 获取转换历史
+    const historyResponse = await converterApi.getConversionHistory()
+    if (historyResponse.code === 200 && historyResponse.data) {
+      conversionHistory.value = historyResponse.data.map((item: any) => ({
+        id: item.id,
+        title: item.title || `转换记录 ${item.id}`,
+        time: new Date(item.createTime).toLocaleString('zh-CN')
+      }))
+    }
+
+    // 获取转换统计
+    const statsResponse = await converterApi.getConversionStats()
+    if (statsResponse.code === 200 && statsResponse.data) {
+      const stats = statsResponse.data
+      conversionStats.totalLines = stats.totalLinesProcessed || 0
+      conversionStats.successRate = stats.averageScore || 0
+      conversionStats.timeCost = stats.averageConversionTime || 0
+    }
+  } catch (error: any) {
+    console.error('初始化数据失败:', error)
+  }
+})
 </script>
 
 <style lang="scss" scoped>

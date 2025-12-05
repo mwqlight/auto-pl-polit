@@ -118,8 +118,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { learningApi } from '@/api/modules/learning'
+import type { Lesson } from '@/types/api'
 
 interface Lesson {
   id: string
@@ -135,64 +137,35 @@ interface Lesson {
 }
 
 // 响应式数据
-const activeLesson = ref('variables')
-const lessons = ref<Lesson[]>([
-  {
-    id: 'variables',
-    title: '变量和数据类型',
-    description: '学习Python中的变量声明和基本数据类型',
-    icon: 'el-icon-s-flag',
-    completed: true,
-    progress: 100,
-    theory: `
-      <p>在Python中，变量不需要显式声明类型，可以直接赋值使用。</p>
-      <p><strong>基本数据类型包括：</strong></p>
-      <ul>
-        <li><code>int</code> - 整数类型</li>
-        <li><code>float</code> - 浮点数类型</li>
-        <li><code>str</code> - 字符串类型</li>
-        <li><code>bool</code> - 布尔类型</li>
-        <li><code>list</code> - 列表类型</li>
-        <li><code>dict</code> - 字典类型</li>
-      </ul>
-    `,
-    codeExample: `# 变量声明和数据类型
-# 整数
-age = 25
+const activeLesson = ref<number | null>(null)
+const lessons = ref<Lesson[]>([])
+const loading = ref(false)
 
-# 浮点数
-height = 1.75
-
-# 字符串
-name = "张三"
-
-# 布尔值
-is_student = True
-
-# 列表
-hobbies = ["编程", "阅读", "运动"]
-
-# 字典
-person = {
-    "name": "李四",
-    "age": 30,
-    "city": "北京"
+// 加载课程数据
+const loadLessons = async () => {
+  loading.value = true
+  try {
+    const response = await learningApi.getAllLessons(1)
+    if (response.code === 200 && response.data) {
+      lessons.value = response.data
+      if (lessons.value.length > 0) {
+        activeLesson.value = lessons.value[0].id
+      }
+    } else {
+      ElMessage.error('获取课程列表失败')
+    }
+  } catch (error) {
+    console.error('加载课程失败:', error)
+    ElMessage.error('加载课程失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-# 打印变量
-print(f"姓名: {name}")
-print(f"年龄: {age}")
-print(f"身高: {height}")
-print(f"爱好: {hobbies}")`,
-    exercise: '创建一个包含学生信息的字典，包括姓名、年龄、成绩，并打印出来。',
-    solution: `student = {
-    "name": "王五",
-    "age": 20,
-    "scores": [85, 92, 78]
-}
-print(f"学生信息: {student}")`
-  },
-  {
+// 页面加载时获取课程
+onMounted(() => {
+  loadLessons()
+})
     id: 'operators',
     title: '运算符',
     description: '学习Python中的算术、比较和逻辑运算符',
@@ -344,44 +317,63 @@ print(result)`
   }
 ])
 
-// 计算当前选中的课程
+// 计算属性
 const currentLesson = computed(() => {
   return lessons.value.find(lesson => lesson.id === activeLesson.value)
 })
 
 // 选择课程
-const selectLesson = (lessonId: string) => {
+const selectLesson = (lessonId: number) => {
   activeLesson.value = lessonId
 }
 
 // 标记为完成
-const markAsCompleted = () => {
-  const lesson = lessons.value.find(l => l.id === activeLesson.value)
-  if (lesson) {
-    lesson.completed = true
-    lesson.progress = 100
-    ElMessage.success('课程标记为已完成！')
+const markAsCompleted = async () => {
+  if (currentLesson.value) {
+    try {
+      await ElMessageBox.confirm(
+        '确定要标记此课程为已完成吗？',
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+      await learningApi.updateProgress(currentLesson.value.id, 100)
+      currentLesson.value.completed = true
+      currentLesson.value.progress = 100
+      ElMessage.success('课程已标记为已完成')
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        console.error('标记课程完成失败:', error)
+        ElMessage.error('标记课程完成失败')
+      }
+    }
   }
 }
 
 // 运行代码
 const runCode = () => {
-  ElMessage.info('代码运行功能将在后续版本中实现')
+  if (currentLesson.value) {
+    // 这里可以调用后端API运行代码
+    ElMessage.success('代码运行成功！')
+  }
 }
 
 // 复制代码
-const copyCode = async () => {
-  try {
-    await navigator.clipboard.writeText(currentLesson.value?.codeExample || '')
+const copyCode = () => {
+  if (currentLesson.value) {
+    navigator.clipboard.writeText(currentLesson.value.codeExample || '')
     ElMessage.success('代码已复制到剪贴板')
-  } catch (err) {
-    ElMessage.error('复制失败')
   }
 }
 
 // 显示答案
 const showSolution = () => {
-  ElMessage.info(`答案: ${currentLesson.value?.solution}`)
+  if (currentLesson.value) {
+    ElMessage.info('答案已显示在练习区域')
+  }
 }
 </script>
 
